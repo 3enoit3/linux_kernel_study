@@ -23,6 +23,7 @@ if [ ! -f "${BEAR}" ]; then
     # Build
     cmake .
     make all
+    chmod 755 ${BEAR}
 
     popd
 fi
