@@ -20,6 +20,7 @@ sudo apt-get install git build-essential kernel-package fakeroot libncurses5-dev
 #   deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu trusty main
 
 sudo apt-get install clang-7 clang-tools-7 lldb-7 lld-7
+sudo pip install clang
 
 # Isolate in its own directory
 mkdir -p runtime/kernel
