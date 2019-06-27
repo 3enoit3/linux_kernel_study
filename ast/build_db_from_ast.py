@@ -3,7 +3,6 @@
 
 """Dump ast"""
 
-
 import sys
 import argparse
 import unittest
@@ -13,7 +12,7 @@ import os
 
 def xpath(entry, path):
     def is_matching(entry, sub_path):
-        if not sub_path:
+        if not sub_path or sub_path=="*":
             return True
 
         constraints = sub_path.split("&")
@@ -21,10 +20,9 @@ def xpath(entry, path):
             key_value = c.split("=")
             k = key_value[0]
             v = key_value[1]
-            if k in entry:
-                if entry[k] != v:
-                    return False
-            else:
+            if k not in entry:
+                return False
+            if entry[k] != v:
                 return False
         return True
 
@@ -32,21 +30,33 @@ def xpath(entry, path):
         if is_matching(entry, levels[0]):
             if len(levels) == 1:
                 return [entry]
-            else:
+            if "children" in entry:
                 captured = []
                 for child in entry["children"]:
                     captured += capture(child, levels[1:])
                 return captured
-        else:
-            return []
+        return []
 
     levels = path.split("/")
     return capture(entry, levels)
 
+def get_struct_node(struct):
+    fields = xpath(struct, "*/kind=CursorKind.FIELD_DECL")
+    if fields:
+        node = {"name": struct["displayname"], "fields": []}
+        for f in fields:
+            f_type = f["type"]
+            f_node = {"name": f["displayname"], "type": f_type["kind"]}
+            node["fields"].append(f_node)
+        return node
+    return None
+
 def collect(ast):
     db = []
-    for structs in xpath(ast, "/kind=CursorKind.TRANSLATION_UNIT/kind=CursorKind.STRUCT_DECL"):
-        db.append(structs["displayname"])
+    for struct in xpath(ast["ast"], "kind=CursorKind.TRANSLATION_UNIT/kind=CursorKind.STRUCT_DECL"):
+        node = get_struct_node(struct)
+        if node:
+            db.append(node)
     return db
 
 def build_db(ast_path, db_path):
